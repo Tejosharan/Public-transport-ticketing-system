@@ -1,0 +1,81 @@
+p{
+    margin: auto;
+}
+input {
+    border: 1px black solid;
+    width: 90%;
+}
+.BusPassBox{
+    background-color: white;
+    color: black;
+    margin-top: 20px;
+    border-radius: 20px;
+    padding: 10px;
+    display:flex;
+    flex-direction: column;
+}
+.HistoryBox{
+    background-color: white;
+    color: black;
+    margin-top: 20px;
+    border-radius: 20px;
+    padding: 10px;
+    display:flex;
+    flex-direction: column;
+}
+.DriverDetails{
+    background-color: white;
+    color: black;
+    margin-top: 20px;
+    border-radius: 20px;
+    padding: 10px;
+    display:flex;
+    flex-direction: column;
+}
+.qrcodegen{
+    background-color: white;
+    color: black;
+    margin-top: 20px;
+    border-radius: 20px;
+    padding: 10px;
+    display:flex;
+    flex-direction: column;
+}
+.qrcodegen > p, h3{
+    margin: 0px;
+}
+
+.DriverDetails > p, h3{
+    margin: 0px;
+}
+
+.BusPassText{
+    margin: 0px;
+}
+.BusPassButton{
+
+    margin-top: 20px;
+    border: none;
+    color: white;
+    background-color: #364DF9;
+    font-size: 20px;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.qr-scanner{
+    position: fixed;
+    background-color: white;
+    color: black;
+    padding: 0px 10px;
+    margin: auto;
+    bottom: 10px;
+    left: 50%;
+    width: 150px;
+    border-radius: 30px;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    box-shadow: rgb(68, 68, 68) 0px 0px 20px;
+    cursor: pointer;
+}
