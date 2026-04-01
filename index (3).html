@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TransitQR — Smart Ticketing</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#f0f4ff;--white:#fff;--text:#0f0f1a;--muted:#6b7280;--border:#e2e8f0;--primary:#2563eb;--primary-dark:#1d4ed8;--success:#16a34a;--card:#fff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh;}
+
+/* HEADER */
+header{background:var(--primary);color:#fff;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:1.3rem;font-weight:700;letter-spacing:-.02em;}
+.logo span{opacity:.7;}
+.wallet-badge{background:rgba(255,255,255,.15);border-radius:50px;padding:.4rem 1rem;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:.4rem;}
+
+/* SCREENS */
+.screen{display:none;max-width:440px;margin:0 auto;padding:1.5rem;}
+.screen.active{display:block;}
+
+/* LOGIN */
+.auth-card{background:var(--card);border-radius:24px;padding:2rem;margin-top:2rem;box-shadow:0 4px 24px rgba(0,0,0,.06);}
+.auth-card h2{font-size:1.5rem;font-weight:700;margin-bottom:.3rem;}
+.auth-card p{color:var(--muted);font-size:.9rem;margin-bottom:1.5rem;}
+.field{margin-bottom:1rem;}
+.field label{font-size:.8rem;font-weight:600;color:var(--muted);display:block;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.05em;}
+.field input{width:100%;padding:.8rem 1rem;border:1.5px solid var(--border);border-radius:12px;font-size:.95rem;font-family:inherit;outline:none;transition:.2s;}
+.field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+.btn-primary{width:100%;background:var(--primary);color:#fff;border:none;padding:1rem;border-radius:14px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;transition:.2s;margin-top:.5rem;}
+.btn-primary:hover{background:var(--primary-dark);}
+.auth-switch{text-align:center;margin-top:1rem;font-size:.85rem;color:var(--muted);}
+.auth-switch a{color:var(--primary);cursor:pointer;font-weight:600;}
+
+/* HOME */
+.greeting{margin-bottom:1.5rem;}
+.greeting h2{font-size:1.4rem;font-weight:700;}
+.greeting p{color:var(--muted);font-size:.9rem;}
+.wallet-card{background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;border-radius:20px;padding:1.5rem;margin-bottom:1.5rem;}
+.wallet-label{font-size:.75rem;opacity:.7;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem;}
+.wallet-amount{font-size:2.5rem;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-.02em;}
+.wallet-actions{display:flex;gap:.75rem;margin-top:1rem;}
+.wallet-btn{flex:1;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:10px;padding:.6rem;font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;text-align:center;}
+.wallet-btn:hover{background:rgba(255,255,255,.25);}
+.section-title{font-size:1rem;font-weight:700;margin-bottom:1rem;}
+.transport-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem;}
+.transport-card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:1.2rem;cursor:pointer;transition:.2s;text-align:center;}
+.transport-card:hover,.transport-card.selected{border-color:var(--primary);background:#eff6ff;}
+.transport-icon{font-size:2rem;margin-bottom:.5rem;}
+.transport-name{font-size:.85rem;font-weight:600;}
+.transport-fare{font-size:.75rem;color:var(--muted);}
+.history-item{background:var(--card);border-radius:14px;padding:1rem;margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);}
+.history-left{display:flex;align-items:center;gap:.75rem;}
+.history-icon{font-size:1.3rem;}
+.history-info .route{font-size:.9rem;font-weight:600;}
+.history-info .date{font-size:.75rem;color:var(--muted);}
+.history-amount{font-size:.9rem;font-weight:700;color:var(--primary);}
+
+/* BOOKING */
+.back-btn{background:none;border:none;color:var(--primary);font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:1rem;display:flex;align-items:center;gap:.3rem;}
+.booking-card{background:var(--card);border-radius:20px;padding:1.5rem;box-shadow:0 4px 24px rgba(0,0,0,.06);}
+.booking-card h3{font-size:1.1rem;font-weight:700;margin-bottom:1.2rem;}
+.station-select{width:100%;padding:.8rem 1rem;border:1.5px solid var(--border);border-radius:12px;font-size:.95rem;font-family:inherit;outline:none;appearance:none;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%236b7280' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") right 1rem center no-repeat;cursor:pointer;}
+.fare-summary{background:var(--bg);border-radius:12px;padding:1rem;margin:1rem 0;}
+.fare-row{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.4rem;}
+.fare-row:last-child{margin-bottom:0;font-weight:700;font-size:.95rem;border-top:1px solid var(--border);padding-top:.6rem;margin-top:.6rem;}
+.swap-btn{display:block;margin:.5rem auto;background:none;border:2px solid var(--border);border-radius:50%;width:36px;height:36px;font-size:1rem;cursor:pointer;transition:.2s;}
+.swap-btn:hover{border-color:var(--primary);}
+
+/* QR TICKET */
+.ticket{background:var(--card);border-radius:24px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.12);}
+.ticket-header{background:var(--primary);color:#fff;padding:1.5rem;text-align:center;}
+.ticket-header h3{font-size:1rem;font-weight:700;margin-bottom:.2rem;}
+.ticket-header p{opacity:.7;font-size:.8rem;}
+.ticket-body{padding:1.5rem;text-align:center;}
+.qr-wrap{background:#fff;border:2px solid var(--border);border-radius:16px;padding:1rem;display:inline-block;margin-bottom:1rem;}
+.ticket-info{display:flex;justify-content:space-around;margin-bottom:1rem;}
+.ticket-detail{text-align:center;}
+.ticket-detail .label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.ticket-detail .value{font-size:.95rem;font-weight:700;margin-top:.2rem;}
+.ticket-id{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);margin-bottom:.5rem;}
+.ticket-divider{border:none;border-top:2px dashed var(--border);margin:1rem 0;}
+.valid-badge{background:#dcfce7;color:var(--success);border-radius:50px;padding:.4rem 1rem;font-size:.82rem;font-weight:700;display:inline-block;}
+
+/* ADD BALANCE */
+.amount-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1rem;}
+.amount-chip{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:.7rem;text-align:center;cursor:pointer;font-weight:600;font-size:.9rem;transition:.2s;}
+.amount-chip:hover,.amount-chip.selected{border-color:var(--primary);background:#eff6ff;color:var(--primary);}
+
+/* NAV BAR */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;max-width:440px;margin:0 auto;}
+.nav-item{flex:1;padding:.8rem;text-align:center;cursor:pointer;font-size:.7rem;font-weight:600;color:var(--muted);transition:.2s;border:none;background:none;font-family:inherit;}
+.nav-item.active,.nav-item:hover{color:var(--primary);}
+.nav-item .nav-icon{font-size:1.3rem;display:block;margin-bottom:.2rem;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="screen active" id="loginScreen">
+  <div style="padding-top:3rem;text-align:center;margin-bottom:1rem;">
+    <div style="font-size:3rem;margin-bottom:.5rem;">🚌</div>
+    <h1 style="font-size:2rem;font-weight:700;letter-spacing:-.03em;">TransitQR</h1>
+    <p style="color:var(--muted);font-size:.9rem;">Smart digital ticketing for everyone</p>
+  </div>
+  <div class="auth-card">
+    <h2>Welcome back</h2>
+    <p>Sign in to access your digital wallet</p>
+    <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com" value="tejo@example.com"/></div>
+    <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" value="password"/></div>
+    <button class="btn-primary" onclick="login()">Sign In →</button>
+    <div class="auth-switch">Don't have an account? <a onclick="showScreen('signupScreen')">Sign up</a></div>
+  </div>
+</div>
+
+<!-- SIGNUP SCREEN -->
+<div class="screen" id="signupScreen">
+  <div style="padding-top:2rem;text-align:center;margin-bottom:1rem;">
+    <div style="font-size:2rem;margin-bottom:.3rem;">🚌</div>
+    <h1 style="font-size:1.8rem;font-weight:700;">Create Account</h1>
+  </div>
+  <div class="auth-card">
+    <h2>Get started</h2>
+    <p>Create your TransitQR account</p>
+    <div class="field"><label>Full Name</label><input type="text" id="signupName" placeholder="Tejo Sharan"/></div>
+    <div class="field"><label>Email</label><input type="email" id="signupEmail" placeholder="you@example.com"/></div>
+    <div class="field"><label>Password</label><input type="password" id="signupPass" placeholder="Create password"/></div>
+    <button class="btn-primary" onclick="signup()">Create Account →</button>
+    <div class="auth-switch">Already have an account? <a onclick="showScreen('loginScreen')">Sign in</a></div>
+  </div>
+</div>
+
+<!-- HOME SCREEN -->
+<div class="screen" id="homeScreen" style="padding-bottom:80px;">
+  <div class="greeting" style="margin-top:1rem;">
+    <h2>Good morning, <span id="userName">Tejo</span> 👋</h2>
+    <p>Where are you travelling today?</p>
+  </div>
+  <div class="wallet-card">
+    <div class="wallet-label">Wallet Balance</div>
+    <div class="wallet-amount">₹<span id="walletBalance">500</span></div>
+    <div class="wallet-actions">
+      <button class="wallet-btn" onclick="showScreen('addBalanceScreen')">+ Add Money</button>
+      <button class="wallet-btn" onclick="showScreen('historyScreen')">📋 History</button>
+    </div>
+  </div>
+  <div class="section-title">Choose Transport</div>
+  <div class="transport-grid">
+    <div class="transport-card" onclick="selectTransport('bus',this)">
+      <div class="transport-icon">🚌</div>
+      <div class="transport-name">Bus</div>
+      <div class="transport-fare">From ₹15</div>
+    </div>
+    <div class="transport-card" onclick="selectTransport('metro',this)">
+      <div class="transport-icon">🚇</div>
+      <div class="transport-name">Metro</div>
+      <div class="transport-fare">From ₹20</div>
+    </div>
+    <div class="transport-card" onclick="selectTransport('train',this)">
+      <div class="transport-icon">🚆</div>
+      <div class="transport-name">Train</div>
+      <div class="transport-fare">From ₹30</div>
+    </div>
+    <div class="transport-card" onclick="selectTransport('auto',this)">
+      <div class="transport-icon">🛺</div>
+      <div class="transport-name">Auto</div>
+      <div class="transport-fare">From ₹25</div>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="goToBooking()" id="bookBtn" style="opacity:.4;cursor:not-allowed;" disabled>Select Transport to Continue</button>
+</div>
+
+<!-- BOOKING SCREEN -->
+<div class="screen" id="bookingScreen" style="padding-bottom:80px;">
+  <button class="back-btn" onclick="showScreen('homeScreen')">← Back</button>
+  <div class="booking-card">
+    <h3 id="bookingTitle">Book Bus Ticket</h3>
+    <div class="field">
+      <label>From</label>
+      <select class="station-select" id="fromStation">
+        <option>Chennai Central</option><option>T. Nagar</option><option>Egmore</option>
+        <option>Anna Nagar</option><option>Velachery</option><option>Tambaram</option>
+        <option>Guindy</option><option>Adyar</option>
+      </select>
+    </div>
+    <button class="swap-btn" onclick="swapStations()">⇅</button>
+    <div class="field">
+      <label>To</label>
+      <select class="station-select" id="toStation">
+        <option>Velachery</option><option>Chennai Central</option><option>T. Nagar</option>
+        <option>Egmore</option><option>Anna Nagar</option><option>Tambaram</option>
+        <option>Guindy</option><option>Adyar</option>
+      </select>
+    </div>
+    <div class="field" style="margin-top:1rem;">
+      <label>Travel Date</label>
+      <input type="date" id="travelDate" style="width:100%;padding:.8rem 1rem;border:1.5px solid var(--border);border-radius:12px;font-size:.95rem;font-family:inherit;outline:none;"/>
+    </div>
+    <div class="fare-summary" id="fareSummary">
+      <div class="fare-row"><span>Base Fare</span><span id="baseFare">₹25</span></div>
+      <div class="fare-row"><span>GST (5%)</span><span id="gstFare">₹1.25</span></div>
+      <div class="fare-row"><span><b>Total</b></span><span id="totalFare"><b>₹26.25</b></span></div>
+    </div>
+    <button class="btn-primary" onclick="generateTicket()">Generate QR Ticket →</button>
+  </div>
+</div>
+
+<!-- TICKET SCREEN -->
+<div class="screen" id="ticketScreen" style="padding-bottom:80px;">
+  <button class="back-btn" onclick="showScreen('homeScreen')">← New Journey</button>
+  <div class="ticket">
+    <div class="ticket-header">
+      <h3 id="ticketTransport">🚌 Bus Ticket</h3>
+      <p id="ticketDate">Today, 10:30 AM</p>
+    </div>
+    <div class="ticket-body">
+      <div class="qr-wrap"><div id="qrCode"></div></div>
+      <div class="ticket-id" id="ticketId">TXN-XXXXXXXX</div>
+      <div class="ticket-info">
+        <div class="ticket-detail"><div class="label">From</div><div class="value" id="tFrom">—</div></div>
+        <div class="ticket-detail"><div class="label">→</div><div class="value" style="font-size:1.5rem">→</div></div>
+        <div class="ticket-detail"><div class="label">To</div><div class="value" id="tTo">—</div></div>
+      </div>
+      <hr class="ticket-divider"/>
+      <div class="ticket-info">
+        <div class="ticket-detail"><div class="label">Fare Paid</div><div class="value" id="tFare">₹0</div></div>
+        <div class="ticket-detail"><div class="label">Status</div><div class="value"><span class="valid-badge">✓ Valid</span></div></div>
+      </div>
+    </div>
+  </div>
+  <p style="text-align:center;font-size:.8rem;color:var(--muted);margin-top:1rem;">Show this QR code to the conductor or scan at entry gate</p>
+</div>
+
+<!-- ADD BALANCE SCREEN -->
+<div class="screen" id="addBalanceScreen" style="padding-bottom:80px;">
+  <button class="back-btn" onclick="showScreen('homeScreen')">← Back</button>
+  <div class="booking-card">
+    <h3>Add Money to Wallet</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:1.2rem;">Current balance: ₹<span id="currentBal">500</span></p>
+    <div class="amount-grid">
+      <div class="amount-chip" onclick="selectAmount(50,this)">₹50</div>
+      <div class="amount-chip" onclick="selectAmount(100,this)">₹100</div>
+      <div class="amount-chip" onclick="selectAmount(200,this)">₹200</div>
+      <div class="amount-chip" onclick="selectAmount(500,this)">₹500</div>
+      <div class="amount-chip" onclick="selectAmount(1000,this)">₹1000</div>
+      <div class="amount-chip" onclick="selectAmount(2000,this)">₹2000</div>
+    </div>
+    <div class="field"><label>Or enter custom amount</label><input type="number" id="customAmount" placeholder="Enter amount" min="10"/></div>
+    <button class="btn-primary" onclick="addBalance()">Add Money →</button>
+  </div>
+</div>
+
+<!-- HISTORY SCREEN -->
+<div class="screen" id="historyScreen" style="padding-bottom:80px;">
+  <button class="back-btn" onclick="showScreen('homeScreen')">← Back</button>
+  <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:1rem;">Travel History</h2>
+  <div id="historyList"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="bottomNav" style="display:none;">
+  <button class="nav-item active" onclick="showScreen('homeScreen')"><span class="nav-icon">🏠</span>Home</button>
+  <button class="nav-item" onclick="showScreen('bookingScreen')"><span class="nav-icon">🎫</span>Book</button>
+  <button class="nav-item" onclick="showScreen('addBalanceScreen')"><span class="nav-icon">💳</span>Wallet</button>
+  <button class="nav-item" onclick="showScreen('historyScreen')"><span class="nav-icon">📋</span>History</button>
+</div>
+
+<script>
+let state={balance:500,user:'Tejo',transport:null,history:[
+  {icon:'🚇',route:'Anna Nagar → Guindy',date:'Yesterday, 9:15 AM',amount:35},
+  {icon:'🚌',route:'T. Nagar → Adyar',date:'Mon, 8:45 AM',amount:20},
+  {icon:'🚆',route:'Chennai Central → Tambaram',date:'Sun, 6:00 PM',amount:45},
+]};
+let selectedAmount=0;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const isAuth=id==='loginScreen'||id==='signupScreen';
+  document.getElementById('bottomNav').style.display=isAuth?'none':'flex';
+  if(id==='homeScreen'){
+    document.getElementById('walletBalance').textContent=state.balance;
+    document.getElementById('userName').textContent=state.user;
+    renderHistory();
+  }
+  if(id==='addBalanceScreen') document.getElementById('currentBal').textContent=state.balance;
+  if(id==='historyScreen') renderHistory();
+  if(id==='bookingScreen'){
+    const today=new Date().toISOString().split('T')[0];
+    document.getElementById('travelDate').value=today;
+    updateFare();
+  }
+}
+
+function login(){
+  const name=document.getElementById('loginEmail').value.split('@')[0];
+  state.user=name.charAt(0).toUpperCase()+name.slice(1);
+  showScreen('homeScreen');
+}
+function signup(){
+  const name=document.getElementById('signupName').value||'User';
+  state.user=name.split(' ')[0];
+  showScreen('homeScreen');
+}
+
+function selectTransport(t,el){
+  state.transport=t;
+  document.querySelectorAll('.transport-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  const btn=document.getElementById('bookBtn');
+  btn.textContent='Book '+t.charAt(0).toUpperCase()+t.slice(1)+' Ticket →';
+  btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer';
+}
+
+function goToBooking(){if(state.transport)showScreen('bookingScreen');}
+
+function getFares(){return{bus:25,metro:35,train:45,auto:30};}
+function updateFare(){
+  const base=getFares()[state.transport]||25;
+  const gst=+(base*.05).toFixed(2);
+  const total=+(base+gst).toFixed(2);
+  document.getElementById('baseFare').textContent='₹'+base;
+  document.getElementById('gstFare').textContent='₹'+gst;
+  document.getElementById('totalFare').innerHTML='<b>₹'+total+'</b>';
+  document.getElementById('bookingTitle').textContent='Book '+(state.transport||'').charAt(0).toUpperCase()+(state.transport||'').slice(1)+' Ticket';
+  return total;
+}
+
+function swapStations(){
+  const f=document.getElementById('fromStation');
+  const t=document.getElementById('toStation');
+  const fv=f.value,tv=t.value;
+  f.value=tv;t.value=fv;
+}
+
+function generateTicket(){
+  const fare=updateFare();
+  if(state.balance<fare){alert('Insufficient balance! Please add money to your wallet.');return;}
+  state.balance=+(state.balance-fare).toFixed(2);
+  const from=document.getElementById('fromStation').value;
+  const to=document.getElementById('toStation').value;
+  const icons={bus:'🚌',metro:'🚇',train:'🚆',auto:'🛺'};
+  const txnId='TXN-'+Math.random().toString(36).substr(2,8).toUpperCase();
+  const now=new Date();
+  const timeStr=now.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+', '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  state.history.unshift({icon:icons[state.transport],route:from+' → '+to,date:'Just now',amount:fare});
+  document.getElementById('ticketTransport').textContent=icons[state.transport]+' '+state.transport.charAt(0).toUpperCase()+state.transport.slice(1)+' Ticket';
+  document.getElementById('ticketDate').textContent=timeStr;
+  document.getElementById('ticketId').textContent=txnId;
+  document.getElementById('tFrom').textContent=from.split(' ')[0];
+  document.getElementById('tTo').textContent=to.split(' ')[0];
+  document.getElementById('tFare').textContent='₹'+fare;
+  const qrEl=document.getElementById('qrCode');
+  qrEl.innerHTML='';
+  new QRCode(qrEl,{text:txnId+'|'+from+'|'+to+'|₹'+fare,width:160,height:160,colorDark:'#1a1a1a',colorLight:'#ffffff'});
+  showScreen('ticketScreen');
+}
+
+function selectAmount(a,el){
+  selectedAmount=a;
+  document.querySelectorAll('.amount-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('customAmount').value='';
+}
+
+function addBalance(){
+  const custom=+document.getElementById('customAmount').value;
+  const amt=custom||selectedAmount;
+  if(!amt||amt<10){alert('Please select or enter an amount (min ₹10)');return;}
+  state.balance=+(state.balance+amt).toFixed(2);
+  showScreen('homeScreen');
+}
+
+function renderHistory(){
+  document.getElementById('historyList').innerHTML=state.history.map(h=>`
+    <div class="history-item">
+      <div class="history-left">
+        <div class="history-icon">${h.icon}</div>
+        <div class="history-info">
+          <div class="route">${h.route}</div>
+          <div class="date">${h.date}</div>
+        </div>
+      </div>
+      <div class="history-amount">−₹${h.amount}</div>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
